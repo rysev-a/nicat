@@ -4,6 +4,8 @@ export interface DomEffect {
 }
 
 export class DomDriver {
+  eventListeners: any;
+
   constructor() {
     this.eventListeners = {}
   }

@@ -1,5 +1,5 @@
 export class HttpDriver {
   apply(effect: HttpEffect) {
-    console.log(effect)
+    console.log(effect);
   }
 }
