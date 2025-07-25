@@ -1,45 +1,45 @@
-import { DomDriver } from "./drivers/dom";
-import { HttpDriver } from "./drivers/http";
-
-export interface NicatMessage {
-  id: string;
-  payload: {
-    type: string;
-    data: any;
-  };
-}
-
-export interface NicatEffect {
-  driver: "dom" | "http" | "router" | "time" | "date" | "random";
-}
-
-export type App = (message: NicatMessage) => NicatEffect[];
+import type { NiCatDriver } from "./drivers/_base.ts";
+import type { NiCatApp, NiCatEffect, NiCatMessage } from "./types.ts";
 
 export class NiCat {
-  messages: NicatMessage[];
-  effects: NicatEffect[];
+  drivers: NiCatDriver[];
+  app: NiCatApp;
 
-  dom: DomDriver;
-  http: HttpDriver;
-  app: App;
+  messages: NiCatMessage[];
+  effects: NiCatEffect[];
 
-  constructor(app: App) {
+  constructor(app: NiCatApp, drivers: NiCatDriver[]) {
+    this.app = app;
+    this.drivers = drivers;
+    this.drivers.forEach((driver: NiCatDriver) => {
+      driver.injectNext((message: NiCatMessage) => {
+        this._send(message);
+        this._next();
+      });
+    });
+
     this.messages = [];
     this.effects = [];
-    this.app = app;
-
-    this.dom = new DomDriver();
-    this.http = new HttpDriver();
   }
 
-  next() {
-    if (this.messages.length > 0) {
-      const message = this.messages.pop() as NicatMessage;
+  _send(message: NiCatMessage) {
+    this.messages.push(message);
+  }
+
+  _next() {
+    this.messages.forEach((message: NiCatMessage) => {
       this.effects.push(...this.app(message));
-    }
+    });
+
+    this.effects.forEach((effect: NiCatEffect) => {
+      this.drivers.forEach((driver: NiCatDriver) => {
+        driver.apply(effect);
+      });
+    });
   }
 
   run() {
-    console.log("run nicat!");
+    this._send({ id: "init" });
+    this._next();
   }
 }
