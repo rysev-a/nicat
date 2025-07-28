@@ -23,5 +23,10 @@
     "formatter": {
       "trailingCommas": "none"
     }
+  },
+  "html": {
+    "formatter": {
+      "enabled": true
+    }
   }
 }
